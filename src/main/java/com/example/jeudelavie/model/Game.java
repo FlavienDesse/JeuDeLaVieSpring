@@ -51,10 +51,6 @@ public class Game {
                     }
                 }
 
-                if (i == 1 && j == 1) {
-                    System.err.println(nbCellAlive);
-
-                }
                 if (nbCellAlive == 3) {
                     res[i][j] = 1;
                 } else if (nbCellAlive < 2 || nbCellAlive > 3) {

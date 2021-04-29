@@ -85,7 +85,6 @@
             if(gameValue.autoplay){
                 buttonStart.removeClass("btn-primary").addClass("btn-secondary")
                 buttonStart.html("Stop")
-                console.log("mdr")
                 timer =  setInterval(runOneCycle, gameValue.speed);
             }
             else{
@@ -146,7 +145,7 @@
         const indexX = Math.ceil((cursorX - startBoard.x) / gameValue.sizeWidth) - 1;
         const indexY = Math.ceil((cursorY - startBoard.y) / gameValue.sizeHeight) - 1;
 
-        if ((indexX >= 0 || indexX < gameValue.nbCellWidth) && (indexY >= 0 || indexY < gameValue.nbCellHeight)) {
+        if ((indexX >= 0 && indexX < gameValue.nbCellWidth) ||  (indexY >= 0 && indexY < gameValue.nbCellHeight)) {
             gameValue.board[indexX][indexY] = 1 - gameValue.board[indexX][indexY]
             drawBoard()
         }
@@ -181,6 +180,7 @@
     inputSizeHeight.change((e) => {
         ctx.canvas.height = parent.height();
         gameValue.sizeHeight = parseInt(e.target.value)
+
         refreshValue()
         drawBoard()
     })
@@ -188,6 +188,22 @@
     inputNbCellHeight.change((e) => {
         ctx.canvas.height = parent.height();
         gameValue.nbCellHeight = parseInt(e.target.value)
+        let res=Array.from({length:  gameValue.nbCellWidth}, _ => new Array(gameValue.nbCellHeight).fill(0));
+        for (let i = 0; i < gameValue.nbCellWidth; i++) {
+            for (let j = 0; j < gameValue.nbCellHeight; j++) {
+                try{
+                    res[i][j] = gameValue.board[i][j]
+                }
+                catch (e){
+                    res[i][j] =0
+                }
+            }
+        }
+        gameValue.board = res
+
+
+
+
         refreshValue()
         drawBoard()
     })
@@ -195,6 +211,19 @@
     inputNbCellWidth.change((e) => {
         ctx.canvas.height = parent.height();
         gameValue.nbCellWidth = parseInt(e.target.value)
+        let res=Array.from({length:  gameValue.nbCellWidth}, _ => new Array(gameValue.nbCellHeight).fill(0));
+        for (let i = 0; i < gameValue.nbCellWidth; i++) {
+            for (let j = 0; j < gameValue.nbCellHeight; j++) {
+                try{
+                    res[i][j] = gameValue.board[i][j]
+                }
+                catch (e){
+                    res[i][j] =0
+                }
+            }
+        }
+        gameValue.board = res
+
         refreshValue()
         drawBoard()
     })
