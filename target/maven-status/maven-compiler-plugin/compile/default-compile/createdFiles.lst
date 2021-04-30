@@ -1,0 +1,6 @@
+com\example\jeudelavie\controller\GameController.class
+com\example\jeudelavie\model\entities\Example.class
+com\example\jeudelavie\model\entities\Game.class
+com\example\jeudelavie\model\daos\DataSourceFactory.class
+com\example\jeudelavie\model\daos\ExampleDao.class
+com\example\jeudelavie\JeuDeLaVieApplication.class
