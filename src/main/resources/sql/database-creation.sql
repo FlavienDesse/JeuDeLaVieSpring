@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS example
+(
+    id    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name  TEXT    NOT NULL,
+    board BLOB    NOT NULL
+);

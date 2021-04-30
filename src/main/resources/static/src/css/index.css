@@ -3,6 +3,10 @@
     display: inline;
 }
 
+.inputModalNumber{
+    display: inline;
+}
+
 .containerCanvas{
     flex: 1 1 0;
     min-width: 0;

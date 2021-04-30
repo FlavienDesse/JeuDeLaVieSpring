@@ -1,11 +1,9 @@
-(function () {
-    const parent = $("#containerCanvas")
-    const canvas = $("#board")
-    const ctx = canvas[0].getContext('2d');
 
-    ctx.canvas.height = parent.height();
-    ctx.canvas.width = parent.width();
-    let timer;
+
+(function () {
+
+    let allExamples = []
+
     let gameValue = {
         sizeWidth: 20,
         sizeHeight: 20,
@@ -15,7 +13,37 @@
         start: false,
         autoplay:false,
         board: Array.from({length: 20}, _ => new Array(20).fill(0)),
-    }
+    };
+
+    const modalRandomButtonAccept = $("#modalRandomButtonAccept");
+    const modalRandomInputProbabilityCellAlive = $("#modalRandomInputProbabilityCellAlive");
+
+    const modalExampleSelect = $("#modalExampleSelect");
+
+    const modalExampleButtonAccept = $("#modalExampleButtonAccept");
+
+    const inputSizeHeight = $("#inputSizeHeight");
+    const inputSizeWidth = $("#inputSizeWidth");
+
+    const inputNbCellHeight = $("#inputNbCellHeight");
+    const inputNbCellWidth = $("#inputNbCellWidth");
+
+    const buttonStart = $("#buttonStart");
+
+    const inputSpeed = $("#inputSpeed");
+
+    const rowSpeed = $("#rowSpeed");
+
+    const inputAutoPlay = $("#inputAutoPlay");
+
+    const parent = $("#containerCanvas")
+    const canvas = $("#board")
+    const ctx = canvas[0].getContext('2d');
+
+    ctx.canvas.height = parent.height();
+    ctx.canvas.width = parent.width();
+    let timer;
+
 
 
     const centerCanvas = {
@@ -37,20 +65,22 @@
         y: Math.round(centerCanvas.y + sizeBoard.height / 2),
     }
 
+    const populateExample = ()=>{
+        $.post( "allExamples")
+            .done(function( data ) {
+               allExamples=data
 
-    const inputSizeHeight = $("#inputSizeHeight");
-    const inputSizeWidth = $("#inputSizeWidth");
+                data.forEach((elem,index)=>{
+                    modalExampleSelect.append(
+                        "<option value="+index+">"+elem.name+"</option>"
+                )
+                })
+                hide()
+            });
+    }
 
-    const inputNbCellHeight = $("#inputNbCellHeight");
-    const inputNbCellWidth = $("#inputNbCellWidth");
 
-    const buttonStart = $("#buttonStart");
-
-    const inputSpeed = $("#inputSpeed");
-
-    const rowSpeed = $("#rowSpeed");
-
-    const inputAutoPlay = $("#inputAutoPlay");
+    populateExample()
 
     inputSpeed.val(gameValue.speed)
 
@@ -63,6 +93,14 @@
     inputAutoPlay.click((e) => {
         rowSpeed.css("display", e.target.checked ? "" : "none");
         gameValue.autoplay = e.target.checked
+
+        if(gameValue.start){
+            gameValue.start=false;
+            buttonStart.removeClass("btn-secondary").addClass("btn-primary")
+            buttonStart.html("Run")
+            clearInterval(timer)
+        }
+
     })
 
     gameValue.autoplay = inputAutoPlay.prop("checked")
@@ -72,11 +110,6 @@
 
 
     buttonStart.click((e) => {
-
-
-
-
-
         if (gameValue.start) {
             buttonStart.removeClass("btn-secondary").addClass("btn-primary")
             buttonStart.html("Run")
@@ -94,12 +127,6 @@
 
         }
         gameValue.start = !gameValue.start
-
-
-
-
-
-
 
     })
 
@@ -123,6 +150,14 @@
 
         endBoard.x = Math.round(centerCanvas.x + sizeBoard.width / 2);
         endBoard.y = Math.round(centerCanvas.y + sizeBoard.height / 2);
+        inputSpeed.val(gameValue.speed)
+
+        inputSizeHeight.val(gameValue.sizeWidth)
+        inputSizeWidth.val(gameValue.sizeHeight)
+
+        inputNbCellHeight.val(gameValue.nbCellHeight)
+        inputNbCellWidth.val(gameValue.nbCellWidth)
+
     }
 
     const drawStrokeBoard = () => {
@@ -155,9 +190,14 @@
     const drawCell = () => {
         for (let i = 0; i < gameValue.nbCellWidth; i++) {
             for (let j = 0; j < gameValue.nbCellHeight; j++) {
-                if (gameValue.board[i][j]) {
-                    ctx.fillRect(startBoard.x + i * gameValue.sizeWidth, startBoard.y + j * gameValue.sizeHeight, gameValue.sizeWidth, gameValue.sizeHeight);
+                try{
+                    if (gameValue.board[i][j]) {
+                        ctx.fillRect(startBoard.x + i * gameValue.sizeWidth, startBoard.y + j * gameValue.sizeHeight, gameValue.sizeWidth, gameValue.sizeHeight);
+                    }
+                }catch (e) {
+
                 }
+
 
             }
         }
@@ -229,7 +269,14 @@
     })
 
     inputSpeed.change((e)=>{
+
         gameValue.speed = parseInt(e.target.value)
+        if(gameValue.start){
+            clearInterval(timer)
+            timer =  setInterval(runOneCycle, gameValue.speed);
+        }
+
+
     })
 
     inputSizeWidth.change((e) => {
@@ -239,8 +286,71 @@
         drawBoard()
     })
 
+    modalExampleButtonAccept.click((e)=>{
+
+        let res = allExamples[modalExampleSelect.val()]
+
+
+
+        if( res.cells.length >gameValue.nbCellWidth ){
+            gameValue.nbCellWidth = res.cells.length
+        }
+        if(res.cells[0].length >gameValue.nbCellHeight){
+            gameValue.nbCellHeight = res.cells[0].length
+        }
+        let newBoard=Array.from({length:  gameValue.nbCellWidth}, _ => new Array(gameValue.nbCellHeight).fill(0));
+
+
+        for (let i = 0; i < gameValue.nbCellWidth; i++) {
+            for (let j = 0; j < gameValue.nbCellHeight; j++) {
+                if(i < res.cells.length && j < res.cells[0].length){
+                    newBoard[i][j]=res.cells[i][j]
+                }
+                else{
+                    newBoard[i][j] = 0;
+                }
+
+            }
+        }
+        gameValue.board=newBoard
+
+        refreshValue()
+        drawBoard()
+
+    })
+
+
+    modalRandomButtonAccept.click(()=>{
+        let prob =modalRandomInputProbabilityCellAlive.prop("value")
+
+        let res=Array.from({length:  gameValue.nbCellWidth}, _ => new Array(gameValue.nbCellHeight).fill(0));
+
+        for (let i = 0; i < gameValue.nbCellWidth; i++) {
+            for (let j = 0; j < gameValue.nbCellHeight; j++) {
+                let rdn = Math.random()
+                let val = rdn >= prob ? 0 : 1
+                res[i][j] = val
+            }
+        }
+        gameValue.board = res
+
+        drawBoard()
+
+    })
+
     $(window).on('resize', updateSizes);
     drawStrokeBoard()
+
+
+
+
+
+
+
+
+
+
+
 
 }());
 
